@@ -1,4 +1,4 @@
-#include <Adafruit_WS2801.h>
+#include "Adafruit-WS2801-Library/Adafruit_WS2801.h"
 #include <Wire.h>                         // The Display Shield needs Wire for its I2C communication.  It comes with Arduino
 #include <Adafruit_RGBLCDShield.h>        // Then Adafruit provides this library to talk to the shield.  Find this at Adafruit
 #include <physMenu.h>                     // This is is our library used by this menu template.  Find this at GC
