@@ -1,4 +1,4 @@
-#include <Adafruit_WS2801.h>
+#include "Adafruit-WS2801-Library/Adafruit_WS2801.h"
 #include <Wire.h>                         // The Display Shield needs Wire for its I2C communication.  It comes with Arduino
 #include <Adafruit_RGBLCDShield.h>        // Then Adafruit provides this library to talk to the shield.  Find this at Adafruit
 #include <physMenu.h>                     // This is is our library used by this menu template.  Find this at GC
@@ -377,6 +377,22 @@ void rainbow(uint8_t wait) {
   for (j=0; j < 256; j++) {     // 3 cycles of all 256 colors in the wheel
     for (i=0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel( (i + j) % 255));
+    }  
+    strip.show();   // write all the pixels out
+    delay(wait);
+  }
+}
+
+void rainbowCycle(uint8_t wait) {
+  int i, j;
+  
+  for (j=0; j < 256 * 5; j++) {     // 5 cycles of all 25 colors in the wheel
+    for (i=0; i < strip.numPixels(); i++) {
+      // tricky math! we use each pixel as a fraction of the full 96-color wheel
+      // (thats the i / strip.numPixels() part)
+      // Then add in j which makes the colors go around per pixel
+      // the % 96 is to make the wheel cycle around
+      strip.setPixelColor(i, Wheel( ((i * 256 / strip.numPixels()) + j) % 256) );
     }  
     strip.show();   // write all the pixels out
     delay(wait);
