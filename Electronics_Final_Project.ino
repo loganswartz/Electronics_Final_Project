@@ -24,6 +24,12 @@ byte testByte2 = B00000000;
 uint32_t colorBitMask;
 uint32_t resultB32;
 
+// rangefinders:
+pinMode(6, OUTPUT);
+pinMode(7, INPUT);
+pinMode(9, OUTPUT);
+pinMode(10, INPUT);
+
 //=====================================================
 
 void setup() {
@@ -263,6 +269,71 @@ void newFollower(uint32_t c) {
   }
 }
 
+void proxGlow(uint32_t color) {
+  m.lcd.clear();
+  m.lcd.home();
+  int glowRange;
+  while(1) {
+    glowRange = getRange()/4;
+    if(glowRange <= 25) {
+      moddedColor = color;
+    } else if(glowRange <= 50) {
+      moddedColor = colorDivider(color,2);
+    } else if(glowRange <= 75) {
+      moddedColor = colorDivider(color,3);
+    } else if(glowRange <= 100) {
+      moddedColor = colorDivider(color,4);
+    } else {
+      moddedColor = colorDivider(color,5);
+    }
+    
+    for (i=0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, moddedColor);
+    }
+    strip.show();
+  }
+}
+
+
+void triRangeCircle(uint32_t color) {
+  m.lcd.clear();
+  m.lcd.home();
+  int range1;
+  int range2;
+  int range3;
+  int mostDist;
+  int averageRange;
+  int LEDposition;
+  
+  while(1) {
+    range1 = getRange();
+    range2 = getRange2();
+    range3 = getRange3();
+
+    if(range1 < range2) {
+      if(range2 < range3) {
+        mostDist = 3;
+      } else {mostDist = 2}
+    } else if(range1 > range3) {
+      mostDist = 1;
+      }             // determines which rangefinder has the least activity / which rangefinder is farthest from an object
+    
+    switch(mostDist) {
+      case 1:
+        range1 = 0;
+      case 2:
+        range2 = 0;
+      case 3:
+        range3 = 0;
+    }           // could eliminate this to save time by moving rangeX = 0 directly into the previous if statements.
+
+    averageRange = (range1 + range2 + range3)/2;
+    moddedColor = colorDivider(color, averageRange/100); // set brightness based on how close the object is to two closest rangefinders
+
+    // REST OF FUNCTION GOES HERE (find position of object in ring)
+  }
+}
+
 // LED HELPER FUNCTIONS ====================================================
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -416,8 +487,8 @@ uint32_t Wheel(byte WheelPos)
 //=========================== Miscellaneous Functions ==========================
 
 int getRange() {
-  pinMode(6, OUTPUT);
-  pinMode(7, INPUT);
+  //pinMode(6, OUTPUT);
+  //pinMode(7, INPUT);
   digitalWrite(6, HIGH);
   delayMicroseconds(10);
   digitalWrite(6, LOW);
@@ -427,12 +498,23 @@ int getRange() {
 }
 
 int getRange2() {
-  pinMode(9, OUTPUT);
-  pinMode(10, INPUT);
+  //pinMode(9, OUTPUT);
+  //pinMode(10, INPUT);
   digitalWrite(9, HIGH);
   delayMicroseconds(10);
   digitalWrite(9, LOW);
   int message_time = pulseIn(10, HIGH);
+  int range = message_time/58.0;
+  return range;
+}
+
+int getRange3() {
+  //pinMode(13, OUTPUT);
+  //pinMode(14, INPUT);
+  digitalWrite(13, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(13, LOW);
+  int message_time = pulseIn(14, HIGH);
   int range = message_time/58.0;
   return range;
 }
