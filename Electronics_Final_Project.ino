@@ -1,4 +1,4 @@
-#include "Adafruit-WS2801-Library/Adafruit_WS2801.h"
+#include <Adafruit_WS2801.h>
 #include <Wire.h>                         // The Display Shield needs Wire for its I2C communication.  It comes with Arduino
 #include <Adafruit_RGBLCDShield.h>        // Then Adafruit provides this library to talk to the shield.  Find this at Adafruit
 #include <physMenu.h>                     // This is is our library used by this menu template.  Find this at GC
@@ -23,6 +23,7 @@ byte testByte = B11111111;
 byte testByte2 = B00000000;
 uint32_t colorBitMask;
 uint32_t resultB32;
+uint32_t colorRange;
 
 //=====================================================
 
@@ -38,6 +39,7 @@ void setup() {
   m.addItem("5 RangeTest  ", &rangeTest);
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
+  m.addItem("8 Color Changer", &rangeColor);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
@@ -232,10 +234,10 @@ void newFollower(uint32_t c) {
       strip.setPixelColor(i, pixelOff);
   }
   strip.show();
-  uint32_t halfBrightness = colorDivider(c, 1);
-  uint32_t quarterBrightness = colorDivider(c, 2);
-  uint32_t eighthBrightness = colorDivider(c, 3);
-  uint32_t sixteenthBrightness = colorDivider(c, 4);
+  uint32_t halfBrightness = colorDivider(colorRange, 1);
+  uint32_t quarterBrightness = colorDivider(colorRange, 2);
+  uint32_t eighthBrightness = colorDivider(colorRange, 3);
+  uint32_t sixteenthBrightness = colorDivider(colorRange, 4);
   
   while(1) {
     oldRange = newRange;
@@ -253,7 +255,7 @@ void newFollower(uint32_t c) {
     strip.setPixelColor(newRange-3, eighthBrightness);
     strip.setPixelColor(newRange-2, quarterBrightness);
     strip.setPixelColor(newRange-1, halfBrightness);
-    strip.setPixelColor(newRange, c);
+    strip.setPixelColor(newRange, colorRange);
     strip.setPixelColor(newRange+1, halfBrightness);
     strip.setPixelColor(newRange+2, quarterBrightness);
     strip.setPixelColor(newRange+3, eighthBrightness);
@@ -383,22 +385,6 @@ void rainbow(uint8_t wait) {
   }
 }
 
-void rainbowCycle(uint8_t wait) {
-  int i, j;
-  
-  for (j=0; j < 256 * 5; j++) {     // 5 cycles of all 25 colors in the wheel
-    for (i=0; i < strip.numPixels(); i++) {
-      // tricky math! we use each pixel as a fraction of the full 96-color wheel
-      // (thats the i / strip.numPixels() part)
-      // Then add in j which makes the colors go around per pixel
-      // the % 96 is to make the wheel cycle around
-      strip.setPixelColor(i, Wheel( ((i * 256 / strip.numPixels()) + j) % 256) );
-    }  
-    strip.show();   // write all the pixels out
-    delay(wait);
-  }
-}
-
 uint32_t Wheel(byte WheelPos)
 {
   if (WheelPos < 85) {
@@ -412,7 +398,42 @@ uint32_t Wheel(byte WheelPos)
   }
 }
 
+uint32_t rangeColor(){
+  int range;
+  int rbgConstrain;
+  byte buttons = m.getButtons();
+  while(1){
+    range = constrain(getRange2(), 0, 100);
+    int rgbBase1 = map(range, 0, 20, 0, 255);
+    int rgbBase2 = map(range, 20, 40, 0, 255);
+    int rgbBase3 = map(range, 40, 60, 0, 255);
+    int rgbBase4 = map(range, 60, 80, 0, 255);
+    int rgbBase5 = map(range, 80, 100, 0, 255);
 
+    
+    if (range <= 20){
+      colorRange = Color(rgbBase1, 0, 0);
+    }
+    else if (range <= 40){
+      colorRange = Color(255, rgbBase2, 0);
+    }
+    else if (range <= 60){
+      colorRange = Color(255-rgbBase3, 255, 0);
+    }
+    else if (range <= 80){
+      colorRange = Color(0, 255, rgbBase4);
+    }
+    else if (range <= 100){
+      colorRange = Color(0, 255-rgbBase5, 255);
+    }
+    for (int i=0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, colorRange);
+    }
+    if (buttons == BUTTON_LEFT){
+      return;
+    }
+  }
+}
 //=========================== Miscellaneous Functions ==========================
 
 int getRange() {
