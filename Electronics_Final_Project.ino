@@ -1,4 +1,4 @@
-#include "Adafruit-WS2801-Library/Adafruit_WS2801.h"
+#include <Adafruit_WS2801.h>
 #include <Wire.h>                         // The Display Shield needs Wire for its I2C communication.  It comes with Arduino
 #include <Adafruit_RGBLCDShield.h>        // Then Adafruit provides this library to talk to the shield.  Find this at Adafruit
 #include <physMenu.h>                     // This is is our library used by this menu template.  Find this at GC
@@ -23,14 +23,8 @@ byte testByte = B11111111;
 byte testByte2 = B00000000;
 uint32_t colorBitMask;
 uint32_t resultB32;
+uint32_t moddedColor;
 
-// rangefinders:
-pinMode(6, OUTPUT);
-pinMode(7, INPUT);
-pinMode(9, OUTPUT);
-pinMode(10, INPUT);
-pinMode(13, OUTPUT);
-pinMode(14, INPUT);
 
 //=====================================================
 
@@ -46,12 +40,22 @@ void setup() {
   m.addItem("5 RangeTest  ", &rangeTest);
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
+  m.addItem("8 ProxGlow   ", &proxGlower);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
   pixelOff = Color(0,0,0);
   strip.show();
   colorBitMask = Color(252,252,252);
+
+
+  // rangefinders:
+  pinMode(6, OUTPUT);
+  pinMode(7, INPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, INPUT);
+  pinMode(13, OUTPUT);
+  pinMode(14, INPUT);
 }
 
 void loop() {
@@ -271,32 +275,13 @@ void newFollower(uint32_t c) {
   }
 }
 
-void proxGlow(uint32_t color) {
+void proxGlower() {
   m.lcd.clear();
   m.lcd.home();
-  int glowRange;
-  while(1) {
-    glowRange = getRange()/4;
-    if(glowRange <= 25) {
-      moddedColor = color;
-    } else if(glowRange <= 50) {
-      moddedColor = colorDivider(color,2);
-    } else if(glowRange <= 75) {
-      moddedColor = colorDivider(color,3);
-    } else if(glowRange <= 100) {
-      moddedColor = colorDivider(color,4);
-    } else {
-      moddedColor = colorDivider(color,5);
-    }
-    
-    for (i=0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, moddedColor);
-    }
-    strip.show();
-  }
+  proxGlow(Color(255,255,255));
 }
 
-
+/*
 void triRangeCircle(uint32_t color) {
   m.lcd.clear();
   m.lcd.home();
@@ -343,7 +328,7 @@ void triRangeCircle(uint32_t color) {
     }
   }
 }
-
+*/
 // LED HELPER FUNCTIONS ====================================================
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -490,6 +475,34 @@ uint32_t Wheel(byte WheelPos)
   } else {
    WheelPos -= 170; 
    return Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
+
+void proxGlow(uint32_t color) {
+  m.lcd.clear();
+  m.lcd.home();
+  int glowRange;
+  int i=0;
+  while(1) {
+    glowRange = getRange()*2;
+    if(glowRange <= 10) {
+      moddedColor = color;
+    } else if(glowRange <= 25) {
+      moddedColor = colorDivider(color,2);
+    } else if(glowRange <= 50) {
+      moddedColor = colorDivider(color,3);
+    } else if(glowRange <= 75) {
+      moddedColor = colorDivider(color,5);
+    } else if(glowRange <= 100) {
+      moddedColor = colorDivider(color,7);
+    } else {
+      moddedColor = pixelOff;
+    }
+    
+    for (i=0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, moddedColor);
+    }
+    strip.show();
   }
 }
 
