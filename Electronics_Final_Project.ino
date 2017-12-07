@@ -29,6 +29,8 @@ pinMode(6, OUTPUT);
 pinMode(7, INPUT);
 pinMode(9, OUTPUT);
 pinMode(10, INPUT);
+pinMode(13, OUTPUT);
+pinMode(14, INPUT);
 
 //=====================================================
 
@@ -330,7 +332,15 @@ void triRangeCircle(uint32_t color) {
     averageRange = (range1 + range2 + range3)/2;
     moddedColor = colorDivider(color, averageRange/100); // set brightness based on how close the object is to two closest rangefinders
 
-    // REST OF FUNCTION GOES HERE (find position of object in ring)
+    //1/ 0 1 2 3 4 5 6 7 8 /2/ 9 10 11 12 13 14 15 16 /3/ 17 18 19 20 21 22 23 24
+
+    if(mostDist == 1) {
+      
+    } else if(mostDist == 2) {
+      
+    } else {
+      
+    }
   }
 }
 
