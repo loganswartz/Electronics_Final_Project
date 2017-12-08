@@ -41,6 +41,7 @@ void setup() {
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
   m.addItem("8 ProxGlow   ", &proxGlower);
+  m.addItem("9 TriRangeGlo", &triRangeCircle);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
@@ -54,8 +55,8 @@ void setup() {
   pinMode(7, INPUT);
   pinMode(9, OUTPUT);
   pinMode(10, INPUT);
-  pinMode(13, OUTPUT);
-  pinMode(14, INPUT);
+  pinMode(11, OUTPUT);
+  pinMode(12, INPUT);
 }
 
 void loop() {
@@ -281,7 +282,7 @@ void proxGlower() {
   proxGlow(Color(255,255,255));
 }
 
-/*
+
 void triRangeCircle(uint32_t color) {
   m.lcd.clear();
   m.lcd.home();
@@ -300,7 +301,7 @@ void triRangeCircle(uint32_t color) {
     if(range1 < range2) {
       if(range2 < range3) {
         mostDist = 3;
-      } else {mostDist = 2}
+      } else {mostDist = 2;}
     } else if(range1 > range3) {
       mostDist = 1;
       }             // determines which rangefinder has the least activity / which rangefinder is farthest from an object
@@ -315,20 +316,25 @@ void triRangeCircle(uint32_t color) {
     }           // could eliminate this to save time by moving rangeX = 0 directly into the previous if statements.
 
     averageRange = (range1 + range2 + range3)/2;
-    moddedColor = colorDivider(color, averageRange/100); // set brightness based on how close the object is to two closest rangefinders
+    moddedColor = colorDivider(color, averageRange/50); // set brightness based on how close the object is to two closest rangefinders
 
     //1/ 0 1 2 3 4 5 6 7 8 /2/ 9 10 11 12 13 14 15 16 /3/ 17 18 19 20 21 22 23 24
 
+    strip.setPixelColor(LEDposition, pixelOff);
+
     if(mostDist == 1) {
-      
+      LEDposition = 13;
     } else if(mostDist == 2) {
-      
+      LEDposition = 21;
     } else {
-      
+      LEDposition = 4;
     }
+    strip.setPixelColor(LEDposition, moddedColor);
+    strip.show();
+    delay(250);
   }
 }
-*/
+
 // LED HELPER FUNCTIONS ====================================================
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -534,10 +540,10 @@ int getRange2() {
 int getRange3() {
   //pinMode(13, OUTPUT);
   //pinMode(14, INPUT);
-  digitalWrite(13, HIGH);
+  digitalWrite(11, HIGH);
   delayMicroseconds(10);
-  digitalWrite(13, LOW);
-  int message_time = pulseIn(14, HIGH);
+  digitalWrite(11, LOW);
+  int message_time = pulseIn(12, HIGH);
   int range = message_time/58.0;
   return range;
 }
