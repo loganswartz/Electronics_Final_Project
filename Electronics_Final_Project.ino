@@ -23,7 +23,6 @@ byte testByte = B11111111;
 byte testByte2 = B00000000;
 uint32_t colorBitMask;
 uint32_t resultB32;
-uint32_t colorRange;
 
 //=====================================================
 
@@ -234,10 +233,10 @@ void newFollower(uint32_t c) {
       strip.setPixelColor(i, pixelOff);
   }
   strip.show();
-  uint32_t halfBrightness = colorDivider(colorRange, 1);
-  uint32_t quarterBrightness = colorDivider(colorRange, 2);
-  uint32_t eighthBrightness = colorDivider(colorRange, 3);
-  uint32_t sixteenthBrightness = colorDivider(colorRange, 4);
+  uint32_t halfBrightness = colorDivider(c, 1);
+  uint32_t quarterBrightness = colorDivider(c, 2);
+  uint32_t eighthBrightness = colorDivider(c, 3);
+  uint32_t sixteenthBrightness = colorDivider(c, 4);
   
   while(1) {
     oldRange = newRange;
@@ -255,7 +254,7 @@ void newFollower(uint32_t c) {
     strip.setPixelColor(newRange-3, eighthBrightness);
     strip.setPixelColor(newRange-2, quarterBrightness);
     strip.setPixelColor(newRange-1, halfBrightness);
-    strip.setPixelColor(newRange, colorRange);
+    strip.setPixelColor(newRange, c);
     strip.setPixelColor(newRange+1, halfBrightness);
     strip.setPixelColor(newRange+2, quarterBrightness);
     strip.setPixelColor(newRange+3, eighthBrightness);
@@ -399,36 +398,38 @@ uint32_t Wheel(byte WheelPos)
 }
 
 uint32_t rangeColor(){
-  int range;
-  int rbgConstrain;
-  byte buttons = m.getButtons();
+  m.lcd.clear();
+  uint32_t colorRange;
   while(1){
-    range = constrain(getRange2(), 0, 100);
-    int rgbBase1 = map(range, 0, 20, 0, 255);
-    int rgbBase2 = map(range, 20, 40, 0, 255);
-    int rgbBase3 = map(range, 40, 60, 0, 255);
-    int rgbBase4 = map(range, 60, 80, 0, 255);
-    int rgbBase5 = map(range, 80, 100, 0, 255);
+    int range = constrain(getRange(), 0, 50);
+    int rgbBase1 = map(range, 0, 10, 0, 255);
+    int rgbBase2 = map(range, 10, 20, 0, 255);
+    int rgbBase3 = map(range, 20, 30, 0, 255);
+    int rgbBase4 = map(range, 30, 40, 0, 255);
+    int rgbBase5 = map(range, 40, 50, 0, 255);
 
     
-    if (range <= 20){
+    if (range <= 10){
       colorRange = Color(rgbBase1, 0, 0);
     }
-    else if (range <= 40){
+    else if (range <= 20){
       colorRange = Color(255, rgbBase2, 0);
     }
-    else if (range <= 60){
+    else if (range <= 30){
       colorRange = Color(255-rgbBase3, 255, 0);
     }
-    else if (range <= 80){
+    else if (range <= 40){
       colorRange = Color(0, 255, rgbBase4);
-    }
-    else if (range <= 100){
+    } 
+    else if(range <= 50){
       colorRange = Color(0, 255-rgbBase5, 255);
     }
     for (int i=0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, colorRange);
     }
+    strip.show();
+    delay(100);
+    byte buttons = m.getButtons();
     if (buttons == BUTTON_LEFT){
       return;
     }
