@@ -28,7 +28,7 @@ uint32_t resultB32;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(31250);
+  Serial.begin(9600);
 
   m.begin();
   m.addItem("1 Set Tempo  ", &setTempo);
@@ -81,6 +81,10 @@ void setTempo(){
   }
 }
 
+int createRoot(){
+  int root = map(constrain(getRange(), 0, 150), 0, 150, 0, 29);
+  return root;
+}
 
 void arpegChord(int root){
   Serial.write(0x90);
@@ -98,13 +102,13 @@ void arpegChord(int root){
 void fullChord(int root){
   Serial.write(0x90);
   Serial.write(whiteKeys[root]);
-  Serial.write(0x40);
+  Serial.write(0x35);
   Serial.write(0x90);
   Serial.write(whiteKeys[root + 2]);
-  Serial.write(0x40);
+  Serial.write(0x35);
   Serial.write(0x90);
   Serial.write(whiteKeys[root + 4]);
-  Serial.write(0x40);
+  Serial.write(0x35);
 }
 
 void playCMajor(){
@@ -191,12 +195,22 @@ void ledTest() {
 
 void rangeTest() {
   m.lcd.clear();
+  bool cycle = 0;
   while(1) {
-    range = getRange();
+    range = getRange3();
     m.lcd.home();
     //m.lcd.print(range);
     //m.lcd.print("     ");
-    colorFollower(Color(155,155,155), range);
+    colorFollower(Color(255,0,0), range);
+    if (cycle = 0){
+      noteOn(whiteKeys[createRoot()]);
+      cycle = 1;
+    }else{
+      cycle = 0;
+      noteOn(whiteKeys[createRoot()]);
+      fullChord(createRoot());
+    }
+    delay(50);
     byte buttons = m.getButtons();
     if (buttons == BUTTON_LEFT) {
       return;
@@ -397,6 +411,34 @@ uint32_t Wheel(byte WheelPos)
   }
 }
 
+uint32_t createColor(){
+  int colorRange;
+  int range = constrain(getRange2(), 0, 50);
+  int rgbBase1 = map(range, 0, 10, 0, 255);
+  int rgbBase2 = map(range, 10, 20, 0, 255);
+  int rgbBase3 = map(range, 20, 30, 0, 255);
+  int rgbBase4 = map(range, 30, 40, 0, 255);
+  int rgbBase5 = map(range, 40, 50, 0, 255);
+  Serial.println(range);
+    
+  if (range <= 10){
+    colorRange = Color(255, 0, 0);
+  }
+  else if (range <= 20){
+    colorRange = Color(255, rgbBase2, 0);
+  }
+  else if (range <= 30){
+    colorRange = Color(255-rgbBase3, 255, 0);
+  }
+  else if (range <= 40){
+    colorRange = Color(0, 255, rgbBase4);
+  } 
+  else if(range <= 50){
+    colorRange = Color(0, 255-rgbBase5, 255);
+  }
+  return colorRange;    
+}
+
 uint32_t rangeColor(){
   m.lcd.clear();
   uint32_t colorRange;
@@ -455,6 +497,17 @@ int getRange2() {
   delayMicroseconds(10);
   digitalWrite(9, LOW);
   int message_time = pulseIn(10, HIGH);
+  int range = message_time/58.0;
+  return range;
+}
+
+int getRange3() {
+  pinMode(11, OUTPUT);
+  pinMode(12, INPUT);
+  digitalWrite(11, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(11, LOW);
+  int message_time = pulseIn(12, HIGH);
   int range = message_time/58.0;
   return range;
 }
