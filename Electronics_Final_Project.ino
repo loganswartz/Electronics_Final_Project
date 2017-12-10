@@ -41,7 +41,7 @@ void setup() {
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
   m.addItem("8 ProxGlow   ", &proxGlower);
-  m.addItem("9 TriRangeGlo", &triRangeCircle);
+  m.addItem("9 TriRangeGlo", &triRangeGlow);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
@@ -282,58 +282,12 @@ void proxGlower() {
   proxGlow(Color(255,255,255));
 }
 
-
-void triRangeCircle(uint32_t color) {
+void triRangeGlow() {
   m.lcd.clear();
   m.lcd.home();
-  int range1;
-  int range2;
-  int range3;
-  int mostDist;
-  int averageRange;
-  int LEDposition;
-  
-  while(1) {
-    range1 = getRange();
-    range2 = getRange2();
-    range3 = getRange3();
-
-    if(range1 < range2) {
-      if(range2 < range3) {
-        mostDist = 3;
-      } else {mostDist = 2;}
-    } else if(range1 > range3) {
-      mostDist = 1;
-      }             // determines which rangefinder has the least activity / which rangefinder is farthest from an object
-    
-    switch(mostDist) {
-      case 1:
-        range1 = 0;
-      case 2:
-        range2 = 0;
-      case 3:
-        range3 = 0;
-    }           // could eliminate this to save time by moving rangeX = 0 directly into the previous if statements.
-
-    averageRange = (range1 + range2 + range3)/2;
-    moddedColor = colorDivider(color, averageRange/50); // set brightness based on how close the object is to two closest rangefinders
-
-    //1/ 0 1 2 3 4 5 6 7 8 /2/ 9 10 11 12 13 14 15 16 /3/ 17 18 19 20 21 22 23 24
-
-    strip.setPixelColor(LEDposition, pixelOff);
-
-    if(mostDist == 1) {
-      LEDposition = 13;
-    } else if(mostDist == 2) {
-      LEDposition = 21;
-    } else {
-      LEDposition = 4;
-    }
-    strip.setPixelColor(LEDposition, moddedColor);
-    strip.show();
-    delay(250);
-  }
+  triRangeCircle(Color(255,255,255));
 }
+
 
 // LED HELPER FUNCTIONS ====================================================
 
@@ -512,6 +466,75 @@ void proxGlow(uint32_t color) {
   }
 }
 
+void triRangeCircle(uint32_t color) {
+  int range1;
+  int range2;
+  int range3;
+  int mostDist;
+  int averageRange;
+  int LEDposition;
+  uint32_t halfBrightness;
+  uint32_t quarterBrightness;
+  uint32_t eighthBrightness;
+  
+  while(1) {
+    range1 = getRange();
+    range2 = getRange2();
+    range3 = getRange3();
+
+    if(range1 < range2) {
+      if(range2 < range3) {
+        mostDist = 3;
+      } else {mostDist = 2;}
+    } else if(range1 > range3) {
+      mostDist = 1;
+      }             // determines which rangefinder has the least activity / which rangefinder is farthest from an object
+    
+    switch(mostDist) {
+      case 1:
+        range1 = 0;
+      case 2:
+        range2 = 0;
+      case 3:
+        range3 = 0;
+    }           // could eliminate this to save time by moving rangeX = 0 directly into the previous if statements.
+
+    averageRange = (range1 + range2 + range3)/2;
+    moddedColor = colorDivider(color, averageRange/50); // set brightness based on how close the object is to two closest rangefinders
+    halfBrightness = colorDivider(moddedColor, 1);
+    quarterBrightness = colorDivider(moddedColor, 2);
+    eighthBrightness = colorDivider(moddedColor, 3);
+
+    //1/ 3 4 5 6 7 8 9 /2/ 10 11 12 13 14 15 16 17 /3/ 18 19 20 21 22 23 24
+
+    strip.setPixelColor(LEDposition-3, pixelOff);
+    strip.setPixelColor(LEDposition-2, pixelOff);
+    strip.setPixelColor(LEDposition-1, pixelOff);
+    strip.setPixelColor(LEDposition, pixelOff);
+    strip.setPixelColor(LEDposition+1, pixelOff);
+    strip.setPixelColor(LEDposition+2, pixelOff);
+    strip.setPixelColor(LEDposition+3, pixelOff);
+
+    if(mostDist == 1) {
+      LEDposition = ((range2/(range2+range3))*8)+3+7;
+    } else if(mostDist == 2) {
+      LEDposition = ((range3/(range3+range1))*7)+3+15;
+    } else {
+      LEDposition = ((range1/(range1+range2))*7)+3;
+    }
+
+    strip.setPixelColor(LEDposition-3, eighthBrightness);
+    strip.setPixelColor(LEDposition-2, quarterBrightness);
+    strip.setPixelColor(LEDposition-1, halfBrightness);
+    strip.setPixelColor(LEDposition, moddedColor);
+    strip.setPixelColor(LEDposition+1, halfBrightness);
+    strip.setPixelColor(LEDposition+2, quarterBrightness);
+    strip.setPixelColor(LEDposition+3, eighthBrightness);
+    
+    strip.show();
+    delay(250);
+  }
+}
 
 //=========================== Miscellaneous Functions ==========================
 
