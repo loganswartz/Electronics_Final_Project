@@ -40,8 +40,9 @@ void setup() {
   m.addItem("5 RangeTest  ", &rangeTest);
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
-  m.addItem("8 ProxGlow   ", &proxGlower);
-  m.addItem("9 TriRangeGlo", &triRangeGlow);
+  m.addItem("8 Color Changer", &rangeColor);
+  m.addItem("9 ProxGlow   ", &proxGlower);
+  m.addItem("10 TriRangeGlo", &triRangeGlow);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
@@ -93,6 +94,10 @@ void setTempo(){
   }
 }
 
+int createRoot(){
+  int root = map(constrain(getRange(), 0, 150), 0, 150, 0, 29);
+  return root;
+}
 
 void arpegChord(int root){
   Serial.write(0x90);
@@ -110,49 +115,50 @@ void arpegChord(int root){
 void fullChord(int root){
   Serial.write(0x90);
   Serial.write(whiteKeys[root]);
-  Serial.write(0x40);
+  Serial.write(0x35);
   Serial.write(0x90);
   Serial.write(whiteKeys[root + 2]);
-  Serial.write(0x40);
+  Serial.write(0x35);
   Serial.write(0x90);
   Serial.write(whiteKeys[root + 4]);
-  Serial.write(0x40);
+  Serial.write(0x35);
 }
 
 void playCMajor(){
   m.lcd.clear();
-  bool arpegStatus = 1;
+  bool chordStatus = 0;
   bool cycle = 0;
   while(1){
     byte buttons = m.getButtons();
     if (buttons == BUTTON_SELECT){
-      if (arpegStatus == 0){
-        arpegStatus = 1;
+      if (chordStatus == 0){
+        chordStatus = 1;
       }
       else{
-        arpegStatus = 0;
+        chordStatus = 0;
       }
     }
-    int root = map(constrain(getRange(), 0, 100), 0, 100, 0, 29);
+    int root = map(constrain(getRange3(), 0, 100), 0, 100, 0, 29);
     int note = map(constrain(getRange2(), 0, 100), 0, 100, 0, 29);
     if (root < 29){
-      if (cycle == 0){
-        cycle = 1;
+      if (chordStatus == 0){
         noteOn(whiteKeys[note]);
-        if (arpegStatus == 0){
-          fullChord(root);
-        }
-        else{
-          arpegChord(root);
-        }
       }
       else{
-        noteOn(whiteKeys[note]);
-        cycle = 0;
+        if (cycle == 0){
+          noteOn(whiteKeys[note]);
+          cycle = 1;
+        }
+        else{
+          noteOn(whiteKeys[note]);
+          fullChord(root);
+          cycle = 0;
+        }
       }
     }
-    int tempoDelay = map(tempo, 60, 240, 1000, 250);
-    delay(tempoDelay/2);
+    //int tempoDelay = map(tempo, 60, 240, 1000, 250);
+    //delay(tempoDelay/2);
+    delay(250);
     if (buttons == BUTTON_LEFT) {
       noteOff();
       return; 
@@ -203,6 +209,19 @@ void ledTest() {
 
 void rangeTest() {
   m.lcd.clear();
+  while(1) {
+    range = getRange3();
+    m.lcd.home();
+    //m.lcd.print(range);
+    //m.lcd.print("     ");
+    colorFollower(createColor(), range);
+    noteOn(whiteKeys[createRoot()]);
+    delay(50);
+    byte buttons = m.getButtons();
+    if (buttons == BUTTON_LEFT) {
+      return;
+    }
+  }
 }
 
 // max: 75cm
@@ -398,22 +417,6 @@ void rainbow(uint8_t wait) {
   }
 }
 
-void rainbowCycle(uint8_t wait) {
-  int i, j;
-  
-  for (j=0; j < 256 * 5; j++) {     // 5 cycles of all 25 colors in the wheel
-    for (i=0; i < strip.numPixels(); i++) {
-      // tricky math! we use each pixel as a fraction of the full 96-color wheel
-      // (thats the i / strip.numPixels() part)
-      // Then add in j which makes the colors go around per pixel
-      // the % 96 is to make the wheel cycle around
-      strip.setPixelColor(i, Wheel( ((i * 256 / strip.numPixels()) + j) % 256) );
-    }  
-    strip.show();   // write all the pixels out
-    delay(wait);
-  }
-}
-
 uint32_t Wheel(byte WheelPos)
 {
   if (WheelPos < 85) {
@@ -425,6 +428,34 @@ uint32_t Wheel(byte WheelPos)
    WheelPos -= 170; 
    return Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
+}
+
+uint32_t createColor(){
+  uint32_t colorRange;
+  int range = constrain(getRange2(), 0, 100);
+  int rgbBase1 = map(range, 0, 20, 0, 255);
+  int rgbBase2 = map(range, 20, 40, 0, 255);
+  int rgbBase3 = map(range, 40, 60, 0, 255);
+  int rgbBase4 = map(range, 60, 80, 0, 255);
+  int rgbBase5 = map(range, 80, 100, 0, 255);
+  Serial.println(range);
+    
+  if (range <= 20){
+    colorRange = Color(rgbBase1, 0, 0);
+  }
+  else if (range <= 40){
+    colorRange = Color(255, rgbBase2, 0);
+  }
+  else if (range <= 60){
+    colorRange = Color(255-rgbBase3, 255, 0);
+  }
+  else if (range <= 80){
+    colorRange = Color(0, 255, rgbBase4);
+  } 
+  else if(range <= 100){
+    colorRange = Color(0, 255-rgbBase5, 255);
+  }
+  return colorRange;    
 }
 
 void proxGlow(uint32_t color) {
@@ -544,6 +575,44 @@ void triRangeCircle(uint32_t color) {
   }
 }
 
+uint32_t rangeColor(){
+  m.lcd.clear();
+  uint32_t colorRange;
+  while(1){
+    int range = constrain(getRange(), 0, 50);
+    int rgbBase1 = map(range, 0, 10, 0, 255);
+    int rgbBase2 = map(range, 10, 20, 0, 255);
+    int rgbBase3 = map(range, 20, 30, 0, 255);
+    int rgbBase4 = map(range, 30, 40, 0, 255);
+    int rgbBase5 = map(range, 40, 50, 0, 255);
+
+    
+    if (range <= 10){
+      colorRange = Color(rgbBase1, 0, 0);
+    }
+    else if (range <= 20){
+      colorRange = Color(255, rgbBase2, 0);
+    }
+    else if (range <= 30){
+      colorRange = Color(255-rgbBase3, 255, 0);
+    }
+    else if (range <= 40){
+      colorRange = Color(0, 255, rgbBase4);
+    } 
+    else if(range <= 50){
+      colorRange = Color(0, 255-rgbBase5, 255);
+    }
+    for (int i=0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, colorRange);
+    }
+    strip.show();
+    delay(50);
+    byte buttons = m.getButtons();
+    if (buttons == BUTTON_LEFT){
+      return;
+    }
+  }
+}
 //=========================== Miscellaneous Functions ==========================
 
 int getRange() {
@@ -569,8 +638,6 @@ int getRange2() {
 }
 
 int getRange3() {
-  //pinMode(13, OUTPUT);
-  //pinMode(14, INPUT);
   digitalWrite(11, HIGH);
   delayMicroseconds(10);
   digitalWrite(11, LOW);
