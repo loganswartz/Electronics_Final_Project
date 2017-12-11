@@ -17,10 +17,10 @@ Adafruit_WS2801 strip = Adafruit_WS2801(25, dataPin, clockPin);
 uint32_t pixelOff;
 uint32_t tempColor;
 int range;
-int floatingFollowerSharpness = 2;
 int howCloseToRange;
 byte testByte = B11111111;
 byte testByte2 = B00000000;
+int floatingFollowerSharpness;
 uint32_t colorBitMask;
 uint32_t resultB32;
 uint32_t moddedColor;
@@ -203,17 +203,6 @@ void ledTest() {
 
 void rangeTest() {
   m.lcd.clear();
-  while(1) {
-    range = getRange();
-    m.lcd.home();
-    //m.lcd.print(range);
-    //m.lcd.print("     ");
-    colorFollower(Color(155,155,155), range);
-    byte buttons = m.getButtons();
-    if (buttons == BUTTON_LEFT) {
-      return;
-    }
-  }
 }
 
 // max: 75cm
@@ -467,72 +456,91 @@ void proxGlow(uint32_t color) {
 }
 
 void triRangeCircle(uint32_t color) {
-  int range1;
-  int range2;
-  int range3;
-  int mostDist;
+  int rangeA;
+  int rangeB;
+  int rangeC;
   int averageRange;
   int LEDposition;
   uint32_t halfBrightness;
   uint32_t quarterBrightness;
   uint32_t eighthBrightness;
+  int maxDist = 80;
   
   while(1) {
-    range1 = getRange();
-    range2 = getRange2();
-    range3 = getRange3();
+    rangeA = getRange();
+    rangeB = getRange2();
+    rangeC = getRange3();
 
-    if(range1 < range2) {
-      if(range2 < range3) {
-        mostDist = 3;
-      } else {mostDist = 2;}
-    } else if(range1 > range3) {
-      mostDist = 1;
-      }             // determines which rangefinder has the least activity / which rangefinder is farthest from an object
-    
-    switch(mostDist) {
-      case 1:
-        range1 = 0;
-      case 2:
-        range2 = 0;
-      case 3:
-        range3 = 0;
-    }           // could eliminate this to save time by moving rangeX = 0 directly into the previous if statements.
-
-    averageRange = (range1 + range2 + range3)/2;
-    moddedColor = colorDivider(color, averageRange/50); // set brightness based on how close the object is to two closest rangefinders
-    halfBrightness = colorDivider(moddedColor, 1);
-    quarterBrightness = colorDivider(moddedColor, 2);
-    eighthBrightness = colorDivider(moddedColor, 3);
-
-    //1/ 3 4 5 6 7 8 9 /2/ 10 11 12 13 14 15 16 17 /3/ 18 19 20 21 22 23 24
-
-    strip.setPixelColor(LEDposition-3, pixelOff);
-    strip.setPixelColor(LEDposition-2, pixelOff);
-    strip.setPixelColor(LEDposition-1, pixelOff);
-    strip.setPixelColor(LEDposition, pixelOff);
-    strip.setPixelColor(LEDposition+1, pixelOff);
-    strip.setPixelColor(LEDposition+2, pixelOff);
-    strip.setPixelColor(LEDposition+3, pixelOff);
-
-    if(mostDist == 1) {
-      LEDposition = ((range2/(range2+range3))*8)+3+7;
-    } else if(mostDist == 2) {
-      LEDposition = ((range3/(range3+range1))*7)+3+15;
-    } else {
-      LEDposition = ((range1/(range1+range2))*7)+3;
+    if(rangeA > rangeB && rangeA > rangeC) {
+      averageRange = (rangeB + rangeC)/2;
+    } else if(rangeB > rangeA && rangeB > rangeC) {
+      averageRange = (rangeA + rangeC)/2;
+    } else if (rangeC > rangeA && rangeC > rangeB) {
+      averageRange = (rangeA + rangeB)/2;
     }
 
-    strip.setPixelColor(LEDposition-3, eighthBrightness);
-    strip.setPixelColor(LEDposition-2, quarterBrightness);
-    strip.setPixelColor(LEDposition-1, halfBrightness);
-    strip.setPixelColor(LEDposition, moddedColor);
-    strip.setPixelColor(LEDposition+1, halfBrightness);
-    strip.setPixelColor(LEDposition+2, quarterBrightness);
-    strip.setPixelColor(LEDposition+3, eighthBrightness);
+    moddedColor = colorDivider(color, averageRange/10); // set brightness based on how close the object is to two closest rangefinders
+    quarterBrightness = colorDivider(moddedColor, 2);
+    eighthBrightness = colorDivider(moddedColor, 4);
+
+    //A/ 3 4 5 6 7 8 9 /B/ 10 11 12 13 14 15 16 17 /C/ 18 19 20 21 22 23 24
+
+
+
+    if(rangeA > rangeB && rangeA > rangeC) {
+      LEDposition = ((rangeB*8)/(rangeB+rangeC))+3+7;
+    } else if(rangeB > rangeA && rangeB > rangeC) {
+      LEDposition = ((rangeC*7)/(rangeC+rangeA))+3+15;
+    } else if (rangeC > rangeA && rangeC > rangeB) {
+      LEDposition = ((rangeA*7)/(rangeA+rangeB))+3;
+    }
+
+    
+    if((rangeA > maxDist && rangeB > maxDist) || (rangeB > maxDist && rangeC > maxDist) || (rangeA > maxDist && rangeC > maxDist)) {
+      for(int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, pixelOff);
+      }
+    } else {
+      if (LEDposition-2 < 3) {
+        strip.setPixelColor(LEDposition-2+25, eighthBrightness);
+      } else {strip.setPixelColor(LEDposition-2, eighthBrightness);}
+      
+      if (LEDposition-1 < 3) {
+        strip.setPixelColor(LEDposition-1+25, quarterBrightness);
+      } else {strip.setPixelColor(LEDposition-1, quarterBrightness);}\
+      
+      strip.setPixelColor(LEDposition, moddedColor);
+
+      if (LEDposition+1 > 25) {
+        strip.setPixelColor(LEDposition+1-25, quarterBrightness);
+      } else {strip.setPixelColor(LEDposition+1, quarterBrightness);}
+
+      if (LEDposition+2 > 25) {
+        strip.setPixelColor(LEDposition+2-25, eighthBrightness);
+      } else {strip.setPixelColor(LEDposition+2, eighthBrightness);}  
+    }
+
     
     strip.show();
-    delay(250);
+    delay(100);
+
+    if (LEDposition-2 < 3) {
+        strip.setPixelColor(LEDposition-2+25, pixelOff);
+      } else {strip.setPixelColor(LEDposition-2, pixelOff);}
+      
+      if (LEDposition-1 < 3) {
+        strip.setPixelColor(LEDposition-1+25, pixelOff);
+      } else {strip.setPixelColor(LEDposition-1, pixelOff);}\
+      
+      strip.setPixelColor(LEDposition, pixelOff);
+
+      if (LEDposition+1 > 25) {
+        strip.setPixelColor(LEDposition+1-25, pixelOff);
+      } else {strip.setPixelColor(LEDposition+1, pixelOff);}
+
+      if (LEDposition+2 > 25) {
+        strip.setPixelColor(LEDposition+2-25, pixelOff);
+      } else {strip.setPixelColor(LEDposition+2, pixelOff);}  
   }
 }
 
