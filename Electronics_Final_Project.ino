@@ -33,16 +33,15 @@ void setup() {
   Serial.begin(31250);
 
   m.begin();
-  m.addItem("1 Set Tempo  ", &setTempo);
-  m.addItem("2 Pentatonic ", &playPent);
-  m.addItem("3 C Major    ", &playCMajor);
-  m.addItem("4 LED Test   ", &ledTest);
-  m.addItem("5 RangeTest  ", &rangeTest);
-  m.addItem("6 RangeTest2 ", &rangeTest2);
-  m.addItem("7 NewFollower", &newFollower);
-  m.addItem("8 Color Changer", &rangeColor);
-  m.addItem("9 ProxGlow   ", &proxGlower);
-  m.addItem("10 TriRangeGlo", &triRangeGlow);
+  m.addItem("1 Set Tempo     ", &setTempo);
+  m.addItem("2 Pentatonic    ", &playPent);
+  m.addItem("3 C Major       ", &playCMajor);
+  m.addItem("4 LED Test      ", &ledTest);
+  m.addItem("5 RangeTest     ", &rangeTest);
+  m.addItem("6 NewFollower   ", &newFollower);
+  m.addItem("7 Color Changer ", &rangeColor);
+  m.addItem("8 ProxGlow      ", &proxGlower);
+  m.addItem("9 TriRangeGlow  ", &triRangeGlow);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
