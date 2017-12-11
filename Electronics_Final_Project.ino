@@ -17,12 +17,14 @@ Adafruit_WS2801 strip = Adafruit_WS2801(25, dataPin, clockPin);
 uint32_t pixelOff;
 uint32_t tempColor;
 int range;
-int floatingFollowerSharpness = 2;
 int howCloseToRange;
 byte testByte = B11111111;
 byte testByte2 = B00000000;
+int floatingFollowerSharpness;
 uint32_t colorBitMask;
 uint32_t resultB32;
+uint32_t moddedColor;
+
 
 //=====================================================
 
@@ -39,13 +41,23 @@ void setup() {
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
   m.addItem("8 Color Changer", &rangeColor);
-
+  m.addItem("9 ProxGlow   ", &proxGlower);
+  m.addItem("10 TriRangeGlo", &triRangeGlow);
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
   pixelOff = Color(0,0,0);
   strip.show();
   colorBitMask = Color(252,252,252);
+
+
+  // rangefinders:
+  pinMode(6, OUTPUT);
+  pinMode(7, INPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, INPUT);
+  pinMode(11, OUTPUT);
+  pinMode(12, INPUT);
 }
 
 void loop() {
@@ -272,6 +284,19 @@ void newFollower(uint32_t c) {
   }
 }
 
+void proxGlower() {
+  m.lcd.clear();
+  m.lcd.home();
+  proxGlow(Color(255,255,255));
+}
+
+void triRangeGlow() {
+  m.lcd.clear();
+  m.lcd.home();
+  triRangeCircle(Color(255,255,255));
+}
+
+
 // LED HELPER FUNCTIONS ====================================================
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -433,6 +458,123 @@ uint32_t createColor(){
   return colorRange;    
 }
 
+void proxGlow(uint32_t color) {
+  m.lcd.clear();
+  m.lcd.home();
+  int glowRange;
+  int i=0;
+  while(1) {
+    glowRange = getRange()*2;
+    if(glowRange <= 10) {
+      moddedColor = color;
+    } else if(glowRange <= 25) {
+      moddedColor = colorDivider(color,2);
+    } else if(glowRange <= 50) {
+      moddedColor = colorDivider(color,3);
+    } else if(glowRange <= 75) {
+      moddedColor = colorDivider(color,5);
+    } else if(glowRange <= 100) {
+      moddedColor = colorDivider(color,7);
+    } else {
+      moddedColor = pixelOff;
+    }
+    
+    for (i=0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, moddedColor);
+    }
+    strip.show();
+  }
+}
+
+void triRangeCircle(uint32_t color) {
+  int rangeA;
+  int rangeB;
+  int rangeC;
+  int averageRange;
+  int LEDposition;
+  uint32_t halfBrightness;
+  uint32_t quarterBrightness;
+  uint32_t eighthBrightness;
+  int maxDist = 80;
+  
+  while(1) {
+    rangeA = getRange();
+    rangeB = getRange2();
+    rangeC = getRange3();
+
+    if(rangeA > rangeB && rangeA > rangeC) {
+      averageRange = (rangeB + rangeC)/2;
+    } else if(rangeB > rangeA && rangeB > rangeC) {
+      averageRange = (rangeA + rangeC)/2;
+    } else if (rangeC > rangeA && rangeC > rangeB) {
+      averageRange = (rangeA + rangeB)/2;
+    }
+
+    moddedColor = colorDivider(color, averageRange/10); // set brightness based on how close the object is to two closest rangefinders
+    quarterBrightness = colorDivider(moddedColor, 2);
+    eighthBrightness = colorDivider(moddedColor, 4);
+
+    //A/ 3 4 5 6 7 8 9 /B/ 10 11 12 13 14 15 16 17 /C/ 18 19 20 21 22 23 24
+
+
+
+    if(rangeA > rangeB && rangeA > rangeC) {
+      LEDposition = ((rangeB*8)/(rangeB+rangeC))+3+7;
+    } else if(rangeB > rangeA && rangeB > rangeC) {
+      LEDposition = ((rangeC*7)/(rangeC+rangeA))+3+15;
+    } else if (rangeC > rangeA && rangeC > rangeB) {
+      LEDposition = ((rangeA*7)/(rangeA+rangeB))+3;
+    }
+
+    
+    if((rangeA > maxDist && rangeB > maxDist) || (rangeB > maxDist && rangeC > maxDist) || (rangeA > maxDist && rangeC > maxDist)) {
+      for(int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, pixelOff);
+      }
+    } else {
+      if (LEDposition-2 < 3) {
+        strip.setPixelColor(LEDposition-2+25, eighthBrightness);
+      } else {strip.setPixelColor(LEDposition-2, eighthBrightness);}
+      
+      if (LEDposition-1 < 3) {
+        strip.setPixelColor(LEDposition-1+25, quarterBrightness);
+      } else {strip.setPixelColor(LEDposition-1, quarterBrightness);}\
+      
+      strip.setPixelColor(LEDposition, moddedColor);
+
+      if (LEDposition+1 > 25) {
+        strip.setPixelColor(LEDposition+1-25, quarterBrightness);
+      } else {strip.setPixelColor(LEDposition+1, quarterBrightness);}
+
+      if (LEDposition+2 > 25) {
+        strip.setPixelColor(LEDposition+2-25, eighthBrightness);
+      } else {strip.setPixelColor(LEDposition+2, eighthBrightness);}  
+    }
+
+    
+    strip.show();
+    delay(100);
+
+    if (LEDposition-2 < 3) {
+        strip.setPixelColor(LEDposition-2+25, pixelOff);
+      } else {strip.setPixelColor(LEDposition-2, pixelOff);}
+      
+      if (LEDposition-1 < 3) {
+        strip.setPixelColor(LEDposition-1+25, pixelOff);
+      } else {strip.setPixelColor(LEDposition-1, pixelOff);}\
+      
+      strip.setPixelColor(LEDposition, pixelOff);
+
+      if (LEDposition+1 > 25) {
+        strip.setPixelColor(LEDposition+1-25, pixelOff);
+      } else {strip.setPixelColor(LEDposition+1, pixelOff);}
+
+      if (LEDposition+2 > 25) {
+        strip.setPixelColor(LEDposition+2-25, pixelOff);
+      } else {strip.setPixelColor(LEDposition+2, pixelOff);}  
+  }
+}
+
 uint32_t rangeColor(){
   m.lcd.clear();
   uint32_t colorRange;
@@ -474,8 +616,8 @@ uint32_t rangeColor(){
 //=========================== Miscellaneous Functions ==========================
 
 int getRange() {
-  pinMode(6, OUTPUT);
-  pinMode(7, INPUT);
+  //pinMode(6, OUTPUT);
+  //pinMode(7, INPUT);
   digitalWrite(6, HIGH);
   delayMicroseconds(10);
   digitalWrite(6, LOW);
@@ -485,8 +627,8 @@ int getRange() {
 }
 
 int getRange2() {
-  pinMode(9, OUTPUT);
-  pinMode(10, INPUT);
+  //pinMode(9, OUTPUT);
+  //pinMode(10, INPUT);
   digitalWrite(9, HIGH);
   delayMicroseconds(10);
   digitalWrite(9, LOW);
@@ -496,8 +638,6 @@ int getRange2() {
 }
 
 int getRange3() {
-  pinMode(11, OUTPUT);
-  pinMode(12, INPUT);
   digitalWrite(11, HIGH);
   delayMicroseconds(10);
   digitalWrite(11, LOW);
