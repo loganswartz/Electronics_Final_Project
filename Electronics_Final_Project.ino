@@ -197,21 +197,13 @@ void ledTest() {
 
 void rangeTest() {
   m.lcd.clear();
-  bool cycle = 0;
   while(1) {
     range = getRange3();
     m.lcd.home();
     //m.lcd.print(range);
     //m.lcd.print("     ");
     colorFollower(createColor(), range);
-    if (cycle = 0){
-      noteOn(whiteKeys[createRoot()]);
-      cycle = 1;
-    }else{
-      cycle = 0;
-      noteOn(whiteKeys[createRoot()]);
-      fullChord(createRoot());
-    }
+    noteOn(whiteKeys[createRoot()]);
     delay(50);
     byte buttons = m.getButtons();
     if (buttons == BUTTON_LEFT) {
