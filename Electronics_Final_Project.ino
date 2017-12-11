@@ -95,7 +95,7 @@ void setTempo(){
 }
 
 int createRoot(){
-  int root = map(constrain(getRange(), 0, 150), 0, 150, 0, 29);
+  int root = map(constrain(getRange3(), 0, 150), 0, 150, 0, 29);
   return root;
 }
 
@@ -156,9 +156,9 @@ void playCMajor(){
         }
       }
     }
-    //int tempoDelay = map(tempo, 60, 240, 1000, 250);
-    //delay(tempoDelay/2);
-    delay(250);
+    int tempoDelay = map(tempo, 60, 240, 1000, 250);
+    delay(tempoDelay/2);
+    //delay(250);
     if (buttons == BUTTON_LEFT) {
       noteOff();
       return; 
@@ -354,10 +354,10 @@ void colorFollower(uint32_t c, int givenRange) {
   int adjustedRange = givenRange/3;
   
   for (i=0; i < adjustedRange; i++) {
-      strip.setPixelColor(i, c);
+      strip.setPixelColor(i+4, c);
     }
   for (i=adjustedRange; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, pixelOff);
+      strip.setPixelColor(i+4, pixelOff);
     }  
   strip.show();
 }
@@ -496,6 +496,7 @@ void triRangeCircle(uint32_t color) {
   uint32_t quarterBrightness;
   uint32_t eighthBrightness;
   int maxDist = 80;
+  int root;
   
   while(1) {
     rangeA = getRange();
@@ -504,10 +505,13 @@ void triRangeCircle(uint32_t color) {
 
     if(rangeA > rangeB && rangeA > rangeC) {
       averageRange = (rangeB + rangeC)/2;
+      root = map(constrain(rangeB, 0, 150), 0, 150, 0, 29);
     } else if(rangeB > rangeA && rangeB > rangeC) {
       averageRange = (rangeA + rangeC)/2;
+      root = map(constrain(rangeC, 0, 150), 0, 150, 0, 29);
     } else if (rangeC > rangeA && rangeC > rangeB) {
       averageRange = (rangeA + rangeB)/2;
+      root = map(constrain(rangeA, 0, 150), 0, 150, 0, 29);
     }
 
     moddedColor = colorDivider(color, averageRange/10); // set brightness based on how close the object is to two closest rangefinders
@@ -551,7 +555,7 @@ void triRangeCircle(uint32_t color) {
       } else {strip.setPixelColor(LEDposition+2, eighthBrightness);}  
     }
 
-    
+    noteOn(whiteKeys[root]);
     strip.show();
     delay(100);
 
