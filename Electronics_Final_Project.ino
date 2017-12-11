@@ -28,7 +28,7 @@ uint32_t resultB32;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(31250);
 
   m.begin();
   m.addItem("1 Set Tempo  ", &setTempo);
@@ -39,6 +39,7 @@ void setup() {
   m.addItem("6 RangeTest2 ", &rangeTest2);
   m.addItem("7 NewFollower", &newFollower);
   m.addItem("8 Color Changer", &rangeColor);
+
   m.lcd.setBacklight(0x1);
 
   strip.begin(); // starts the LED strip
@@ -113,38 +114,39 @@ void fullChord(int root){
 
 void playCMajor(){
   m.lcd.clear();
-  bool arpegStatus = 1;
+  bool chordStatus = 0;
   bool cycle = 0;
   while(1){
     byte buttons = m.getButtons();
     if (buttons == BUTTON_SELECT){
-      if (arpegStatus == 0){
-        arpegStatus = 1;
+      if (chordStatus == 0){
+        chordStatus = 1;
       }
       else{
-        arpegStatus = 0;
+        chordStatus = 0;
       }
     }
-    int root = map(constrain(getRange(), 0, 100), 0, 100, 0, 29);
+    int root = map(constrain(getRange3(), 0, 100), 0, 100, 0, 29);
     int note = map(constrain(getRange2(), 0, 100), 0, 100, 0, 29);
     if (root < 29){
-      if (cycle == 0){
-        cycle = 1;
+      if (chordStatus == 0){
         noteOn(whiteKeys[note]);
-        if (arpegStatus == 0){
-          fullChord(root);
-        }
-        else{
-          arpegChord(root);
-        }
       }
       else{
-        noteOn(whiteKeys[note]);
-        cycle = 0;
+        if (cycle == 0){
+          noteOn(whiteKeys[note]);
+          cycle = 1;
+        }
+        else{
+          noteOn(whiteKeys[note]);
+          fullChord(root);
+          cycle = 0;
+        }
       }
     }
-    int tempoDelay = map(tempo, 60, 240, 1000, 250);
-    delay(tempoDelay/2);
+    //int tempoDelay = map(tempo, 60, 240, 1000, 250);
+    //delay(tempoDelay/2);
+    delay(250);
     if (buttons == BUTTON_LEFT) {
       noteOff();
       return; 
@@ -201,7 +203,7 @@ void rangeTest() {
     m.lcd.home();
     //m.lcd.print(range);
     //m.lcd.print("     ");
-    colorFollower(Color(255,0,0), range);
+    colorFollower(createColor(), range);
     if (cycle = 0){
       noteOn(whiteKeys[createRoot()]);
       cycle = 1;
@@ -412,28 +414,28 @@ uint32_t Wheel(byte WheelPos)
 }
 
 uint32_t createColor(){
-  int colorRange;
-  int range = constrain(getRange2(), 0, 50);
-  int rgbBase1 = map(range, 0, 10, 0, 255);
-  int rgbBase2 = map(range, 10, 20, 0, 255);
-  int rgbBase3 = map(range, 20, 30, 0, 255);
-  int rgbBase4 = map(range, 30, 40, 0, 255);
-  int rgbBase5 = map(range, 40, 50, 0, 255);
+  uint32_t colorRange;
+  int range = constrain(getRange2(), 0, 100);
+  int rgbBase1 = map(range, 0, 20, 0, 255);
+  int rgbBase2 = map(range, 20, 40, 0, 255);
+  int rgbBase3 = map(range, 40, 60, 0, 255);
+  int rgbBase4 = map(range, 60, 80, 0, 255);
+  int rgbBase5 = map(range, 80, 100, 0, 255);
   Serial.println(range);
     
-  if (range <= 10){
-    colorRange = Color(255, 0, 0);
-  }
-  else if (range <= 20){
-    colorRange = Color(255, rgbBase2, 0);
-  }
-  else if (range <= 30){
-    colorRange = Color(255-rgbBase3, 255, 0);
+  if (range <= 20){
+    colorRange = Color(rgbBase1, 0, 0);
   }
   else if (range <= 40){
+    colorRange = Color(255, rgbBase2, 0);
+  }
+  else if (range <= 60){
+    colorRange = Color(255-rgbBase3, 255, 0);
+  }
+  else if (range <= 80){
     colorRange = Color(0, 255, rgbBase4);
   } 
-  else if(range <= 50){
+  else if(range <= 100){
     colorRange = Color(0, 255-rgbBase5, 255);
   }
   return colorRange;    
@@ -470,7 +472,7 @@ uint32_t rangeColor(){
       strip.setPixelColor(i, colorRange);
     }
     strip.show();
-    delay(100);
+    delay(50);
     byte buttons = m.getButtons();
     if (buttons == BUTTON_LEFT){
       return;
