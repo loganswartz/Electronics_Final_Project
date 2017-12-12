@@ -5,4 +5,4 @@ INTERACTIVE LIGHT & SOUND
  all the necessary libraries.
  
  This project was completed as the final project of our Fall 2017 Electronics class. RIP our first light
- strand, you will not be forgotten. Wiring schematic can be found here: loganswartz.com/resources/20171211_161803.jpg
+ strand, you will not be forgotten. Wiring schematic can be found here: http://loganswartz.com/resources/20171211_161803.jpg
