@@ -1,0 +1,1 @@
+Move all these libraries to the primary Arduino Libraries folder, at least until the Arduino IDE decides to support local library filepaths.

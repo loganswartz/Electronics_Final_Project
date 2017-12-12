@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For PhysicsMenu
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PhysicsMenu	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+dispatch                KEYWORD2
+addItem	                KEYWORD2
+getButtons              KEYWORD2
+getDebouncedButtons     KEYWORD2
+begin                   KEYWORD2
+setMessage              KEYWORD2
+appendMessage           KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
