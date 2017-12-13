@@ -201,13 +201,14 @@ void ledTest() {
   }
 }
 
-/*
+
+void rangeTest() {
+  /*
  * One rangefinder controls the number of lights that are lit up
  * and the note that is played (colorFollower and noteOn) and the
  * other controls the color of the lights (createColor; the value
  * of range2 is determined inside createColor, not in rangeTest.)
  */
-void rangeTest() {
   m.lcd.clear();
   while(1) {
     range = getRange3();
@@ -244,13 +245,14 @@ void rangeTest2() {
   }
 }
 
-/*
+
+void newFollower(uint32_t c) {
+  /*
  * Improved iteration on "orb" style follower, much faster than floatingFollower.
  * Implementation in triRangeCircle of turning the lights on and off is even
  * less resource intensive than this, but only ever so slightly, because it
  * uses only one range variable instead of 2.
  */
-void newFollower(uint32_t c) {
   m.lcd.clear();
   m.lcd.home();
   int newRange = 0;
@@ -307,9 +309,8 @@ void triRangeGlow() {
 // LED HELPER FUNCTIONS ====================================================
 
 
-// Create a packed 24-bit color value from R,G,B
-uint32_t Color(byte r, byte g, byte b)
-{
+uint32_t Color(byte r, byte g, byte b) {
+  // Create a packed 24-bit color value from R,G,B
   uint32_t c;
   c = r;
   c <<= 8;
@@ -319,7 +320,9 @@ uint32_t Color(byte r, byte g, byte b)
   return c;
 }
 
-/*
+
+uint32_t colorDivider(uint32_t inputColor, int powerOf2) {
+  /*
  * colorDivider uses bit-shifting and bitmasks in
  * order to divide the RGB values of a fed-in uint32_t
  * by a fed-in factor of 2.
@@ -328,8 +331,6 @@ uint32_t Color(byte r, byte g, byte b)
  * This means it will do 255/(2^3), and return a
  * uint32_t equivalent to about (32,32,32)
  */
-uint32_t colorDivider(uint32_t inputColor, int powerOf2)
-{
   int dimmerValue;
   dimmerValue = simplePower(powerOf2)-1;
   int brightVal = 255 - dimmerValue;
@@ -339,13 +340,14 @@ uint32_t colorDivider(uint32_t inputColor, int powerOf2)
   return result;
 }
 
+
+void colorWipe(uint32_t c, uint8_t wait) {
 /*
  * colorWipe(), dualColorWipe(), and dualColorToneWipe() are
  * all early / Adafruit-included test functions intended to simply
  * test the light strand, they are not implemented currently in
  * any menu functions.
  */
-void colorWipe(uint32_t c, uint8_t wait) {
   int i;
  
   for (i=0; i < strip.numPixels(); i++) {
@@ -395,12 +397,13 @@ void dualColorToneWipe(uint32_t ca, uint32_t cb, uint8_t wait) {
   }
 }
 
+
+void colorFollower(uint32_t c, int givenRange) {
 /*
  * Early test function, lights up strip up to a
  * certain point based on the range, and turns off
  * the remaining part of the strip.
  */
-void colorFollower(uint32_t c, int givenRange) {
   int i;
   int adjustedRange = givenRange/3;
   
@@ -413,12 +416,13 @@ void colorFollower(uint32_t c, int givenRange) {
   strip.show();
 }
 
+
+void floatingFollower(uint32_t c, int givenRange) {
 /*
  * Early iteration of "floating orb" idea, lights up
  * lights based around an object at a certain range
  * and nowhere else.
  */
-void floatingFollower(uint32_t c, int givenRange) {
   int i;
   floatingFollowerSharpness = 2;
   int adjustedRange = givenRange/3;
@@ -471,11 +475,12 @@ uint32_t createColor(){
   return colorRange;    
 }
 
+
+void proxGlow(uint32_t color) {
 /*
  * proxGlow changes brightness of the entire strip
  * based on range of a single rangefinder.
  */
-void proxGlow(uint32_t color) {
   m.lcd.clear();
   m.lcd.home();
   int glowRange;
@@ -504,6 +509,8 @@ void proxGlow(uint32_t color) {
 }
 
 
+
+void triRangeCircle(uint32_t color) {
 /*
  * triRangeCircle() is supposed to use 3 rangefinders 
  * to make an "orb" of light follow your hands around
@@ -515,7 +522,6 @@ void proxGlow(uint32_t color) {
  * and what note to play. Works but takes practice to actually
  * control without a ton of flickering.
  */
-void triRangeCircle(uint32_t color) {
   int range1;
   int range2;
   int range3;
@@ -577,7 +583,7 @@ void triRangeCircle(uint32_t color) {
     
 
     /*
-     * in the following function, there are several rangeX*[some number]
+     * in the following segment, there are several rangeX*[some number]
      * statements, the [some number] is determined by the number of LED's
      * in the third of the string covered by that rangefinder, as shown in
      * the above diagram. These take range of a single rangefinder and divide
