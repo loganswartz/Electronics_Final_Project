@@ -1,4 +1,4 @@
-INTERACTIVE LIGHT & SOUND
+# INTERACTIVE LIGHT & SOUND
  *  By Spencer Aeschliman and Logan Swartzendruber
  
  This project is hosted as a GitHub repo at https://github.com/loganswartz/Electronics_Final_Project, including
